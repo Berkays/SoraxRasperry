@@ -1,0 +1,13 @@
+[Unit]
+Description= Modem Manager Debug Service
+
+[Service]
+User=root
+Type=simple
+ExecStart=/bin/bash /home/admin/service_boot_modem_configure.sh
+ExecStartPost=/bin/bash /home/admin/boot_sim_configure.sh
+Restart=on-failure
+TimeoutSec=0
+
+[Install]
+WantedBy=multi-user.target
