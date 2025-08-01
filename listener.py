@@ -315,6 +315,7 @@ def has_minutes_passed(dt, minutes):
 try:
     configure_module()
     logger.info("Waiting for SMS...")
+    # delete_sms_store()
     while True:
         # logger.info("Listing messages...")
         # response1 = run_at_command(f"AT+CMGL=0").strip() # Get unread messages

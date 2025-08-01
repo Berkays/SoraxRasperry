@@ -1,0 +1,12 @@
+[Unit]
+Description= Modem Connection DHCP service
+
+[Service]
+User=root
+Type=simple
+ExecStart=/home/admin/listener_env/bin/python3 /home/admin/modemConnect.py
+Restart=on-failure
+TimeoutSec=0
+
+[Install]
+WantedBy=multi-user.target

@@ -3,7 +3,7 @@
 /bin/bash /home/admin/usb-to-eth-route.sh
 python3 /home/admin/modemCycle.py
 
-sleep 10 # Wait Modem Manager
+sleep 15 # Wait Modem Manager
 
 rfkill block 0
 while true; do
@@ -29,14 +29,13 @@ while true; do
 	mmcli -m any --command="AT+QICSGP=1,1,\"internet\",\"vodafone\",\"vodafone\",3"
 	sleep 3
 	echo "Modem configuration completed."
+    systemctl stop modemConnectScript.service
 	systemctl start modemConnectScript.service
 	/home/admin/listener_env/bin/python3 /home/admin/listener.py
 	#while true; do
 	#	echo "Press [CTRL+C] to stop.."
 	#	sleep 1
 	#done
-    sleep 45
-    reboot
     fi
 
     # Delay to avoid excessive CPU usage
