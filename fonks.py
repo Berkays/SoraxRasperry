@@ -157,9 +157,8 @@ def parse_external_command(logger, msg, send_sms, delete_msg_store):
         msgContent = msg['text'].upper()
         if("SORAX_FONK_RESET" in msgContent):
             delete_msg_store()
-            time.sleep(5)
             send_sms(number , 'OK')
-            time.sleep(5)
+            time.sleep(3)
             reset_pi(logger)
             return True
         
