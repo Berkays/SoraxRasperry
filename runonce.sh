@@ -16,7 +16,7 @@ if test -d /home/admin/SoraxRasperry; then
     # cp /home/admin/SoraxRasperry/fonks.py /home/admin/fonks.py
 
     # cp /home/admin/SoraxRasperry/create_log.sh /home/admin/create_log.sh
-    # cp /home/admin/SoraxRasperry/upload_log.sh /home/admin/upload_log.sh
+    cp /home/admin/SoraxRasperry/upload_log.sh /home/admin/upload_log.sh
     # cp /home/admin/SoraxRasperry/fetch_source.sh /home/admin/fetch_source.sh
     cp /home/admin/SoraxRasperry/runonce.sh /home/admin/runonce.sh
 fi
