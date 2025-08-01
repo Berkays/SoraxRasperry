@@ -319,7 +319,7 @@ try:
     # delete_sms_store()
 
     internetStatus = internet()
-    
+
     while True:
         # logger.info("Listing messages...")
         # response1 = run_at_command(f"AT+CMGL=0").strip() # Get unread messages
@@ -345,9 +345,10 @@ try:
                     logger.info("SMS Expired.")
                     continue 
                 msgContent = msg['text'].upper()
+                number = msg['number']
+
                 if("SORAX_STATUS" in msgContent):
                     validCommand = True
-                    number = msg['number']
                     drvStatus = 1 if relayStatus is True else 0
                     hasInternet = 1 if internet() is True else 0
                     temp, _ = check_CPU_temp()
@@ -365,6 +366,7 @@ try:
                     validCommand = True
                     GPIO.output(DVR_RELAY_PIN, GPIO.HIGH)  # Turn on
                     logger.info("Relay:ON")
+                    send_sms(number, "DVR ON")
                     relayToggled = True
                     relayStatus = True
                     continue
@@ -372,6 +374,7 @@ try:
                     validCommand = True
                     GPIO.output(DVR_RELAY_PIN, GPIO.LOW)  # Turn off
                     logger.info("Relay:OFF")
+                    send_sms(number, "DVR OFF")
                     relayToggled = True
                     relayStatus = False
                     continue
@@ -392,9 +395,6 @@ try:
             time.sleep(1)
             send_sms('+905313554600', "Net=1")
             internetStatus = True
-
-
-
 except KeyboardInterrupt:
     print("Exiting...")
 finally:
