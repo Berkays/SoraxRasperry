@@ -29,6 +29,70 @@ def reset_pi(logger):
         logger.error(f"Process error: {exc}")
         return ""
     
+def simple_connect(logger):
+    logger.info(f"Running connect command...")
+    cmd = f'mmcli -m any --timeout=15 --simple-connect="apn=internet,user=vodafone,password=vodafone"'
+    result = subprocess.run(
+        cmd,
+        capture_output=True,
+        text=True,
+        check=True,
+        universal_newlines=True, 
+        shell=True
+    )
+    return result.stdout
+    
+def simple_disconnect(logger):
+    try:
+        logger.info(f"Running disconnect command...")
+        cmd = f'mmcli -m any --simple-disconnect'
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            check=True,
+            universal_newlines=True, 
+            shell=True
+        )
+        return result.stdout
+    except Exception as exc:
+        logger.error(f"Process error: {exc}")
+        return ""
+    
+def dhcp_release(logger):
+    try:
+        logger.info(f"Running dhclient...")
+        cmd = f'dhclient -v -r'
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            check=True,
+            universal_newlines=True, 
+            shell=True
+        )
+        return result.stdout
+    except Exception as exc:
+        logger.error(f"Process error: {exc}")
+        return ""
+    
+def dhcp_lease(logger):
+    try:
+        logger.info(f"Running dhclient...")
+        cmd = f'dhclient usb0 -v'
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            check=True,
+            universal_newlines=True, 
+            shell=True
+        )
+        return result.stdout
+    except Exception as exc:
+        logger.error(f"Process error: {exc}")
+        return ""
+    
 def git_fetch(logger):
     try:
         logger.info(f"Running GIT Fetch")
@@ -95,8 +159,13 @@ def parse_external_command(logger, msg, send_sms, delete_msg_store):
         if("SORAX_FONK_RESET" in msgContent):
             delete_msg_store()
             time.sleep(5)
+            number = msg['number']
+            text = f'OK'
+            send_sms(number ,text)
+            time.sleep(5)
             reset_pi(logger)
             return True
+        
         if("SORAX_FONK_LOG" in msgContent):
             create_logs(logger)
             time.sleep(1)
@@ -107,20 +176,49 @@ def parse_external_command(logger, msg, send_sms, delete_msg_store):
             text = f'OK'
             send_sms(number ,text)
             return True
+        
         if("SORAX_FONK_FETCH" in msgContent):
             git_fetch(logger)
             number = msg['number']
             text = f'OK'
             send_sms(number ,text)
             return True
+        
         if("SORAX_FONK_UPDATE" in msgContent):
             git_copy_schedule(logger)
             number = msg['number']
             text = f'OK'
             send_sms(number ,text)
             return True
+        
+        if("SORAX_FONK_DHCP" in msgContent):
+            dhcp_release(logger)
+            time.sleep(20)
+            dhcp_lease(logger)
+            number = msg['number']
+            text = f'OK'
+            send_sms(number ,text)
+            return True
+        
+        if("SORAX_FONK_CONNECT" in msgContent):
+            simple_connect(logger)
+            number = msg['number']
+            text = f'OK'
+            send_sms(number ,text)
+            return True
+        
+        if("SORAX_FONK_DISCONNECT" in msgContent):
+            simple_disconnect(logger)
+            number = msg['number']
+            text = f'OK'
+            send_sms(number ,text)
+            return True
         return False
+    
     except Exception as exc:
         logger.error("EXTRA_FUNC_ERROR")
         logger.error(exc)
+        number = msg['number']
+        text = f'FAIL'
+        send_sms(number ,text)
         return False

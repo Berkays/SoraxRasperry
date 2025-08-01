@@ -5,7 +5,7 @@ import time
 logging.basicConfig(format='[%(levelname)s] %(asctime)s %(message)s', level=logging.INFO)
 logger = logging.getLogger()
 
-MODEM_PWR_PIN = 26  # Relay
+MODEM_PWR_PIN = 26
 
 # Configure GPIO
 logger.info("Configuring GPIO...")

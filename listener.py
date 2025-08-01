@@ -1,7 +1,3 @@
-# AT COMMANDS
-# Turn OFF
-# AT+QPOWD
-
 # Return IMEI
 # AT+GSN
 
