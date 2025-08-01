@@ -1,0 +1,11 @@
+[Unit]
+Description=Run script once on next boot
+ConditionPathExists=/var/local/runonce.sh
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /var/local/runonce.sh
+ExecStop=/bin/rm /var/local/runonce.sh
+
+[Install]
+WantedBy=multi-user.target

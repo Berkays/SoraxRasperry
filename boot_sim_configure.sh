@@ -18,8 +18,6 @@ while true; do
 	sleep 3
 	#mmcli -m any --command="AT+QCFG=\"usbnet\",1"
 	#sleep 15
-	#mmcli -m any --command="AT" # Test Command
-	#sleep 0.4
 	mmcli -m any --command="AT+CSMS=1" # Enable SMS
 	sleep 0.4
 	mmcli -m any --command="AT+CPMS=\"MT\",\"MT\",\"MT\"" # Configure SMS Storage
@@ -31,19 +29,14 @@ while true; do
 	mmcli -m any --command="AT+QICSGP=1,1,\"internet\",\"vodafone\",\"vodafone\",3"
 	sleep 3
 	echo "Modem configuration completed."
-	#mmcli -m any -e
-	#sleep 1
-	#mmcli -m any --simple-connect="apn=internet,user=vodafone,password=vodafone"
 	systemctl start modemConnectScript.service
-	#sleep 20
-	#dhclient -v -r
-	#sleep 10
-	#dhclient usb0 -v
-	#/home/admin/listener_env/bin/python3 /home/admin/listener.py
+	/home/admin/listener_env/bin/python3 /home/admin/listener.py
 	#while true; do
 	#	echo "Press [CTRL+C] to stop.."
 	#	sleep 1
 	#done
+    sleep 45
+    reboot
     fi
 
     # Delay to avoid excessive CPU usage

@@ -60,6 +60,8 @@ import RPi.GPIO as GPIO
 from smspdudecoder.easy import read_incoming_sms
 import socket
 
+import fonks
+
 logging.basicConfig(format='[%(levelname)s] %(asctime)s %(message)s', level=logging.INFO)
 logger = logging.getLogger()
 
@@ -103,13 +105,17 @@ def get_first_modem_index():
 
 get_first_modem_index()
 
-if(modemIndex == -1):
-    logger.error("No Modem Found")
-    time.sleep(1)
+for i in range(0, 60):
+    if(modemIndex == -1):
+        logger.error("No Modem Found")
+        time.sleep(5)
+        get_first_modem_index()
+        continue
+    break
 
 def run_at_command(command):
     try:
-        logging.info(f"Running AT Command: {command}")
+        logger.info(f"Running AT Command: {command}")
         cmd = f'mmcli -m any --command="{command}"'
         result = subprocess.run(
             cmd,
@@ -121,28 +127,12 @@ def run_at_command(command):
         )
         return result.stdout
     except Exception as exc:
-        logging.error(f"Process error: {exc}")
+        logger.error(f"Process error: {exc}")
         return ""
-    
-def reset_pi():
-    try:
-        logging.info(f"Running PI Reset")
-        cmd = f'reboot now'
-        subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            check=True,
-            universal_newlines=True, 
-            shell=True
-        )
-    except Exception as exc:
-        logging.error(f"Process error: {exc}")
-        return ""
-    
+        
 def send_sms(number, text):
     try:
-        logging.info(f"Creating sms: {text}")
+        logger.info(f"Creating sms: {text}")
         cmd = f'mmcli -m any --messaging-create-sms="text=\'{text}\',number=\'{number}\'"'
         result = subprocess.run(
             cmd,
@@ -160,8 +150,8 @@ def send_sms(number, text):
 
         if match:
             sms_index = match.group(1)
-            logging.info(f"SMS Index: {sms_index}")
-            logging.info(f"Sending sms: {text}")
+            logger.info(f"SMS Index: {sms_index}")
+            logger.info(f"Sending sms: {text}")
             cmd = f'mmcli -s {sms_index} --send'
             result = subprocess.run(
                 cmd,
@@ -171,11 +161,11 @@ def send_sms(number, text):
                 universal_newlines=True, 
                 shell=True
             )
-            logging.info(result.stdout)
+            logger.info(result.stdout)
         else:
-            logging.info("No SMS index found")
+            logger.info("No SMS index found")
     except Exception as exc:
-        logging.error(f"Process error: {exc}")
+        logger.error(f"Process error: {exc}")
 
 def internet(host="8.8.8.8", port=53, timeout=3):
     try:
@@ -183,7 +173,7 @@ def internet(host="8.8.8.8", port=53, timeout=3):
         socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
         return True
     except socket.error as ex:
-        logging.info(ex)
+        logger.info(ex)
         return False
     
 def check_CPU_temp():
@@ -199,7 +189,7 @@ def check_CPU_temp():
 
 def get_sms_cmd(index):
     try:
-        logging.info(f"List SMS Command")
+        logger.info(f"List SMS Command")
         cmd = f'mmcli -m any --sms {index}'
         result = subprocess.run(
             cmd,
@@ -211,12 +201,12 @@ def get_sms_cmd(index):
         )
         return result.stdout
     except Exception as exc:
-        logging.error(f"Process error: {exc}")
+        logger.error(f"Process error: {exc}")
         return ""
     
 def list_sms_cmd():
     try:
-        logging.info(f"List SMS Command")
+        logger.info(f"List SMS Command")
         cmd = f'mmcli -m any --messaging-list-sms'
         result = subprocess.run(
             cmd,
@@ -251,12 +241,12 @@ def list_sms_cmd():
             print(sms_data)
         return sms_list
     except Exception as exc:
-        logging.error(f"Process error: {exc}")
+        logger.error(f"Process error: {exc}")
         return []
     
 def delete_sms_store():
     try:
-        logging.info(f"Delete SMS Store")
+        logger.info(f"Delete SMS Store")
         cmd = f'mmcli -m any --messaging-list-sms'
         result = subprocess.run(
             cmd,
@@ -282,7 +272,7 @@ def delete_sms_store():
             time.sleep(0.3)
         
     except Exception as exc:
-        logging.error(f"Process error: {exc}")
+        logger.error(f"Process error: {exc}")
         return []
 
 # Configure GPIO
@@ -333,7 +323,6 @@ try:
         messages = list_sms_cmd()
         if(messages is None or len(messages) == 0):
             messages = []
-            # logger.info("No message.")
         else:
             logger.info(f"{len(messages)} messages.")
             relayToggled = False
@@ -344,7 +333,8 @@ try:
                 if(has_minutes_passed(msg['date'], 10)):
                     logger.info("SMS Expired.")
                     continue 
-                if("SORAX_STATUS" in msg['text'].upper()):
+                msgContent = msg['text'].upper()
+                if("SORAX_STATUS" in msgContent):
                     validCommand = True
                     number = msg['number']
                     drvStatus = 1 if relayStatus is True else 0
@@ -354,22 +344,20 @@ try:
                     send_sms(number ,text)
                     time.sleep(2)
                     continue
-                if("SORAX_RESET" in msg['text'].upper()):
-                    delete_sms_store()
-                    time.sleep(1)
-                    reset_pi()
-                    time.sleep(2)
+                if(fonks.parse_external_command(logger, msg, send_sms, delete_sms_store)):
+                    # Custom Commands
+                    validCommand = True
                     continue
                 if(relayToggled is True):
                     continue
-                if("SORAX_ON" in msg['text'].upper()):
+                if("SORAX_ON" in msgContent):
                     validCommand = True
                     GPIO.output(DVR_RELAY_PIN, GPIO.HIGH)  # Turn on
                     logger.info("Relay:ON")
                     relayToggled = True
                     relayStatus = True
                     continue
-                elif("SORAX_OFF" in msg['text'].upper()):
+                elif("SORAX_OFF" in msgContent):
                     validCommand = True
                     GPIO.output(DVR_RELAY_PIN, GPIO.LOW)  # Turn off
                     logger.info("Relay:OFF")
