@@ -66,6 +66,7 @@ EXPIRATION_LENGTH = 15 # Minutes
 
 modemAvailable = False
 relayStatus = False
+internetStatus = True
 
 def sigint_handler(signal, frame):
     print('Interrupted')
@@ -316,6 +317,9 @@ try:
     configure_module()
     logger.info("Waiting for SMS...")
     # delete_sms_store()
+
+    internetStatus = internet()
+    
     while True:
         # logger.info("Listing messages...")
         # response1 = run_at_command(f"AT+CMGL=0").strip() # Get unread messages
@@ -376,6 +380,20 @@ try:
                 delete_sms_store()
         time.sleep(5)
         get_modem_available()
+
+        hasInternet = internet()
+        if(internetStatus is True and hasInternet is False):
+            send_sms('+905427159715', "Net=0!")
+            time.sleep(1)
+            send_sms('+905313554600', "Net=0!")
+            internetStatus = False
+        if(internetStatus is False and hasInternet is True):
+            send_sms('+905427159715', "Net=1")
+            time.sleep(1)
+            send_sms('+905313554600', "Net=1")
+            internetStatus = True
+
+
 
 except KeyboardInterrupt:
     print("Exiting...")
