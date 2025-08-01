@@ -19,6 +19,11 @@ if test -d /home/admin/SoraxRasperry; then
     cp /home/admin/SoraxRasperry/upload_log.sh /home/admin/upload_log.sh
     # cp /home/admin/SoraxRasperry/fetch_source.sh /home/admin/fetch_source.sh
     cp /home/admin/SoraxRasperry/runonce.sh /home/admin/runonce.sh
+
+    chmod +x /home/admin/runonce.sh
+    chmod +x /home/admin/fetch_source.sh
+    chmod +x /home/admin/upload_log.sh
+    chmod +x /home/admin/create_log.sh
 fi
 
 echo "0" > /home/admin/update.txt
