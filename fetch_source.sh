@@ -2,6 +2,8 @@
 
 cd /home/admin/
 
+set -e
+
 if test -d SoraxRasperry; then
     echo "Git found"
     cd SoraxRasperry

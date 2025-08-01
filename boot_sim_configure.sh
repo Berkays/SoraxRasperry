@@ -19,13 +19,13 @@ while true; do
 	#mmcli -m any --command="AT+QCFG=\"usbnet\",1"
 	#sleep 15
 	mmcli -m any --command="AT+CSMS=1" # Enable SMS
-	sleep 0.4
+	sleep 0.5
 	mmcli -m any --command="AT+CPMS=\"MT\",\"MT\",\"MT\"" # Configure SMS Storage
-	sleep 0.4
+	sleep 0.5
 	mmcli -m any --command="AT+CNMI=2,0,0,0,0" # Disable SMS notifications
-	sleep 0.4
+	sleep 0.5
 	mmcli -m any --command="AT+CGDCONT=1,\"IP\",\"internet\""
-	sleep 0.4
+	sleep 0.5
 	mmcli -m any --command="AT+QICSGP=1,1,\"internet\",\"vodafone\",\"vodafone\",3"
 	sleep 3
 	echo "Modem configuration completed."

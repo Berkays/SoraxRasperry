@@ -1,7 +1,6 @@
 import socket
-import sys, subprocess, signal
+import sys, subprocess
 import time
-import re
 import socket
 
 def check_internet(host="8.8.8.8", port=53, timeout=3):
@@ -12,7 +11,6 @@ def check_internet(host="8.8.8.8", port=53, timeout=3):
     except socket.error as ex:
         return False
     
-
 def reset_pi(logger):
     try:
         logger.info(f"Running PI Reset")
@@ -155,70 +153,59 @@ def upload_logs(logger):
 
 def parse_external_command(logger, msg, send_sms, delete_msg_store):
     try:
+        number = msg['number']
         msgContent = msg['text'].upper()
         if("SORAX_FONK_RESET" in msgContent):
             delete_msg_store()
             time.sleep(5)
-            number = msg['number']
-            text = f'OK'
-            send_sms(number ,text)
+            send_sms(number , 'OK')
             time.sleep(5)
             reset_pi(logger)
             return True
         
         if("SORAX_FONK_LOG" in msgContent):
+            if(check_internet() is False):
+                send_sms(number, 'NET:0')
+                return True
+
             create_logs(logger)
             time.sleep(1)
             upload_logs(logger)
             time.sleep(2)
 
-            number = msg['number']
-            text = f'OK'
-            send_sms(number ,text)
+            send_sms(number, 'OK')
             return True
         
         if("SORAX_FONK_FETCH" in msgContent):
             git_fetch(logger)
-            number = msg['number']
-            text = f'OK'
-            send_sms(number ,text)
+            send_sms(number , 'OK')
             return True
         
         if("SORAX_FONK_UPDATE" in msgContent):
             git_copy_schedule(logger)
-            number = msg['number']
-            text = f'OK'
-            send_sms(number ,text)
+            send_sms(number , 'OK')
             return True
         
         if("SORAX_FONK_DHCP" in msgContent):
             dhcp_release(logger)
             time.sleep(20)
             dhcp_lease(logger)
-            number = msg['number']
-            text = f'OK'
-            send_sms(number ,text)
+            send_sms(number , 'OK')
             return True
         
         if("SORAX_FONK_CONNECT" in msgContent):
             simple_connect(logger)
-            number = msg['number']
-            text = f'OK'
-            send_sms(number ,text)
+            send_sms(number , 'OK')
             return True
         
         if("SORAX_FONK_DISCONNECT" in msgContent):
             simple_disconnect(logger)
-            number = msg['number']
-            text = f'OK'
-            send_sms(number ,text)
+            send_sms(number , 'OK')
             return True
         return False
     
     except Exception as exc:
         logger.error("EXTRA_FUNC_ERROR")
         logger.error(exc)
-        number = msg['number']
-        text = f'FAIL'
-        send_sms(number ,text)
+        send_sms(number , 'FAIL')
         return False

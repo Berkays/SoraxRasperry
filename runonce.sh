@@ -1,5 +1,11 @@
 #!/bin/bash
 
+str=0
+if [[ "$(< /home/admin/update.txt)" == "$str" ]]; then
+    # No runonce update
+    exit 0
+fi
+
 # Copy files 
 if test -d /home/admin/SoraxRasperry; then
     echo "Writing new source files"

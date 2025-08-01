@@ -64,7 +64,7 @@ logger = logging.getLogger()
 DVR_RELAY_PIN = 17  # Relay
 EXPIRATION_LENGTH = 15 # Minutes
 
-modemIndex = -1
+modemAvailable = False
 relayStatus = False
 
 def sigint_handler(signal, frame):
@@ -75,37 +75,44 @@ def sigint_handler(signal, frame):
 
 signal.signal(signal.SIGINT, sigint_handler)
 
-def get_first_modem_index():
-    global modemIndex
+def get_modem_available():
+    global modemAvailable
     try:
         # Run mmcli -m to list all modems
+        logger.info(f"Running modem indexer")
+        cmd = f'mmcli -m any'
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            check=True,
+            universal_newlines=True, 
+            shell=True
+        )
         logger.info("Finding modem instance...")
-        result = subprocess.run(['mmcli', '-L'], capture_output=True, text=True, check=True)
         output = result.stdout
 
         logger.info(output)
-        # Extract modem indices using regex
-        modem_indices = re.findall(r'/org/freedesktop/ModemManager1/Modem/(\d+)', output)
         
-        if not modem_indices:
-            modemIndex = -1
-            return
-
-        # Return the first modem index
-        modemIndex = modem_indices[0]
+        if 'vodafone' in output:
+            modemAvailable = True
+        else:
+            modemAvailable = False
 
     except subprocess.CalledProcessError as e:
         logger.error(f"Error executing mmcli: {e}")
-        modemIndex = -1
-        return
+        modemAvailable =False
 
-get_first_modem_index()
+get_modem_available()
 
-for i in range(0, 60):
-    if(modemIndex == -1):
-        logger.error("No Modem Found")
+for i in range(0, 50):
+    if(modemAvailable == False):
+
+        if i == 48:
+            fonks.reset_pi(logger)
+        logger.error(f'{i}: No Modem Found')
         time.sleep(5)
-        get_first_modem_index()
+        get_modem_available()
         continue
     break
 
@@ -308,7 +315,6 @@ def has_minutes_passed(dt, minutes):
 try:
     configure_module()
     logger.info("Waiting for SMS...")
-
     while True:
         # logger.info("Listing messages...")
         # response1 = run_at_command(f"AT+CMGL=0").strip() # Get unread messages
@@ -316,6 +322,10 @@ try:
         # messages1 = extract_pdu_messages(response1)
         # messages2 = extract_pdu_messages(response2)
         # logging.info(response1)
+        if(modemAvailable is False):
+            time.sleep(3)
+            continue
+
         messages = list_sms_cmd()
         if(messages is None or len(messages) == 0):
             messages = []
@@ -335,7 +345,7 @@ try:
                     number = msg['number']
                     drvStatus = 1 if relayStatus is True else 0
                     hasInternet = 1 if internet() is True else 0
-                    temp, msg = check_CPU_temp()
+                    temp, _ = check_CPU_temp()
                     text = f'DVR:{drvStatus},NET:{hasInternet}, CPU:{temp}C'
                     send_sms(number ,text)
                     time.sleep(2)
@@ -364,7 +374,7 @@ try:
                 # run_at_command("AT+CMGD=1,4") # Delete Read Messages
                 delete_sms_store()
         time.sleep(5)
-        # get_first_modem_index()
+        get_modem_available()
 
 except KeyboardInterrupt:
     print("Exiting...")
